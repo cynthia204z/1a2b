@@ -197,7 +197,7 @@
         msg.value = `第${currQsBlock.value + 1}個位置不可為空`;
         return;
       }
-      if (gameType.value === '0' && new Set(tempQsArr).size !== tempQsArr.length) {
+      if (gameType.value === 0 && new Set(tempQsArr).size !== tempQsArr.length) {
         msg.value = `不可重複`;
         return;
       }
