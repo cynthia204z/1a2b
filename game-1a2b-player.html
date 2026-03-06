@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1A2B</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.0.5/vue.global.js"></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: #3b3939;
+      font-variant: all-petite-caps;
+    }
+
+    .btn {
+      border-radius: 50%;
+      width: 15px;
+      height: 15px;
+      padding: 0;
+      margin: 2px;
+    }
+
+    .btn.temp {
+      border-color: lightgray;
+      cursor: pointer;
+    }
+
+    .w {
+      background-color: #eee;
+    }
+
+    .r {
+      background-color: rgb(239, 109, 109);
+    }
+
+    .o {
+      background-color: #efad5c;
+    }
+
+    .y {
+      background-color: #ffff7c;
+    }
+
+    .g {
+      background-color: rgb(129, 183, 109);
+    }
+
+    .b {
+      background-color: #4848b1;
+    }
+
+    .p {
+      background-color: #be94dc;
+    }
+
+    .qs {
+      width: 90px;
+      justify-content: space-between;
+      display: flex;
+      align-items: center;
+    }
+
+    div.btn {
+      border: 1px solid #ffffff;
+    }
+
+    .block {
+      border: 1px solid transparent;
+      box-sizing: border-box;
+      border-radius: 3px;
+    }
+
+    .block:not(:first-of-type) {
+      margin-left: 2px;
+    }
+
+    .block-group {
+      display: flex;
+      padding: 3px;
+      border: 1px solid #cfcfcf;
+      border-radius: 5px;
+      background-color: #dbe0e9;
+      margin-bottom: 5px;
+    }
+
+    .curr-block {
+      background-color: #b5d1fc;
+      border-color: gray;
+    }
+
+    .playground {
+      margin-top: 20px;
+      margin-left: 20px;
+    }
+
+    .text {
+      margin-top: 20px;
+    }
+
+    .text-btn {
+      border: none;
+      margin-top: 20px;
+      padding: 3px 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div class="playground" v-if="!startStatus">
+      <input type="radio" v-model="gameType" value="0" />Disable Repeat<br>
+      <input type="radio" v-model="gameType" value="1" />Enable Repeat<br>
+      <button class="text-btn" @click="init">Start</button>
+    </div>
+    <div class="playground" v-if="startStatus">
+      <div v-for="(ans, i) in ansArr" :key="i" class="qs">
+        <div class="block-group">
+          <div v-for="(block, j) in ans" :key="j" class="block">
+            <div class="btn" :class="block"></div>
+          </div>
+        </div>
+        <div style="margin-left: 15px; font-size: small;">{{ `${xAxBRec[i].a}A${xAxBRec[i].b}B` }}</div>
+      </div>
+      <div class="text">Answer:</div>
+      <div>
+        <button v-for="i of 6" :key="i" class="btn temp" :class="colorMap[i]" @click="enterQs(i)"></button>
+      </div>
+      <div class="qs">
+        <div v-for="(block, i) in tempQsArr" :key="i" class="block" :class="{'curr-block': currQsBlock === i}">
+          <div class="btn" :class="[colorMap[block]]" @click="chgCurrQsBlock(i)"></div>
+        </div>
+      </div>
+      <div style="color: red; font-size: x-small;">{{ msg }}</div>
+      <button class="text-btn" @click="enter">Check</button>
+    </div>
+  </div>
+  <script type="module">
+    const { createApp, reactive, ref } = Vue;
+    const input = ref('');
+    const tempQsArr = reactive([0, 0, 0, 0]);
+    const currQsBlock = ref(0);
+    const ansArr = reactive([]);
+    const xAxBRec = reactive([]);
+    const msg = ref("");
+    const gameType = ref(0);
+    let rightAnsRec = [0, 0, 0, 0];
+    const colorMap = reactive({
+      0: 'w',
+      1: 'r',
+      2: 'o',
+      3: 'y',
+      4: 'g',
+      5: 'b',
+      6: 'p',
+    });
+    const startStatus = ref(false);
+    const getRandomArbitrary = (min, max) => {
+      return Math.random() * (max - min) + min;
+    }
+    const init = () => {
+      if (gameType.value === 0) {
+        const colorList = [1, 2, 3, 4, 5, 6];
+        for (let i = 0; i < rightAnsRec.length; i++) {
+          const randomIndex = Math.floor(getRandomArbitrary(0, colorList.length));
+          rightAnsRec[i] = colorList[randomIndex];
+          colorList.splice(randomIndex, 1);
+        }
+      } else {
+        rightAnsRec = rightAnsRec.map(() => Math.floor(getRandomArbitrary(1, 7)));
+      };
+      const consoleArr = [];
+      rightAnsRec.forEach(color => {
+        consoleArr.push(colorMap[color]);
+      });
+      console.log(consoleArr);
+      startStatus.value = true;
+    };
+    const chgCurrQsBlock = (i) => {
+      currQsBlock.value = i;
+    };
+    const enterQs = (color) => {
+      msg.value = "";
+      tempQsArr[currQsBlock.value] = color;
+      if (currQsBlock.value !== 3) {
+        currQsBlock.value++;
+        if (currQsBlock.value + 1 <= 3 && tempQsArr[currQsBlock.value] !== 0 && tempQsArr[currQsBlock.value + 1] === 0) {
+          currQsBlock.value++;
+        }
+      }
+    };
+    const enter = () => {
+      if (tempQsArr.includes(0)) {
+        msg.value = `第${currQsBlock.value + 1}個位置不可為空`;
+        return;
+      }
+      if (gameType.value === '0' && new Set(tempQsArr).size !== tempQsArr.length) {
+        msg.value = `不可重複`;
+        return;
+      }
+      checkAns();
+    };
+    const checkAns = () => {
+      let a = 0;
+      let b = 0;
+      if (gameType.value === '0') {
+        tempQsArr.forEach((color, i) => {
+          if (color === rightAnsRec[i]) {
+            a++;
+          } else if (rightAnsRec.includes(color)) {
+            b++;
+          }
+        });
+      } else {
+        const rightAnsRecCopy = [...rightAnsRec];
+        tempQsArr.forEach((color, i) => {
+          if (color === rightAnsRecCopy[i]) {
+            a++;
+            rightAnsRecCopy[i] = 0;
+          }
+        });
+        tempQsArr.forEach((color, i) => {
+          if (color !== rightAnsRecCopy[i] && rightAnsRecCopy.includes(color)) {
+            b++;
+            rightAnsRecCopy[rightAnsRecCopy.indexOf(color)] = 0;
+          }
+        });
+      }
+      xAxBRec.push({ a, b });
+      ansArr.push([...tempQsArr.map(color => colorMap[color])]);
+      tempQsArr.fill(0);
+      currQsBlock.value = 0;
+    };
+    const app = Vue.createApp({
+      setup() {
+        return {
+          input,
+          tempQsArr,
+          currQsBlock,
+          chgCurrQsBlock,
+          enterQs,
+          enter,
+          ansArr,
+          colorMap,
+          checkAns,
+          xAxBRec,
+          msg,
+          gameType,
+          startStatus,
+          init,
+        };
+      },
+    });
+    app.mount('#app');
+  </script>
+</body>
+
+</html>
